@@ -1,7 +1,7 @@
 <script setup>
 import {reactive} from 'vue'
 import {Greet} from '../../wailsjs/go/main/App'
-import {Get2String} from '../../wailsjs/go/etcd/EtcdClient'
+import {Get2String, PutCompact} from '../../wailsjs/go/etcd/EtcdClient'
 
 const data = reactive({
   name: "",
@@ -25,6 +25,12 @@ function get() {
   })
 }
 
+function put() {
+  PutCompact(data.name, data.jsonContent).then(result => {
+
+  })
+}
+
 </script>
 
 <template>
@@ -32,11 +38,13 @@ function get() {
     <div id="result" class="result">{{ data.resultText }}</div>
     <div id="input" class="input-box">
       <input id="name" v-model="data.name" autocomplete="off" class="input" type="text"/>
-      <button class="btn" @click="get">Greet</button>
+      <button class="btn" @click="get">Get</button>
+      <button class="btn" @click="put">Put</button>
     </div>
 
     <el-input
         type="textarea"
+        style="margin-top: 20px"
         :autosize="{ minRows: 2, maxRows: 24}"
         placeholder="请输入内容"
         v-model="data.jsonContent">

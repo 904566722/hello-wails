@@ -7,3 +7,5 @@ export function Get(arg1:string):Promise<models.KeyVal>;
 export function Get2String(arg1:string):Promise<string>;
 
 export function Put(arg1:string,arg2:string):Promise<void>;
+
+export function PutCompact(arg1:string,arg2:string):Promise<void>;

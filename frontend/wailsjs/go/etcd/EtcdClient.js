@@ -13,3 +13,7 @@ export function Get2String(arg1) {
 export function Put(arg1, arg2) {
   return window['go']['etcd']['EtcdClient']['Put'](arg1, arg2);
 }
+
+export function PutCompact(arg1, arg2) {
+  return window['go']['etcd']['EtcdClient']['PutCompact'](arg1, arg2);
+}
