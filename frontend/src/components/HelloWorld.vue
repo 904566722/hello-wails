@@ -1,10 +1,12 @@
 <script setup>
 import {reactive} from 'vue'
 import {Greet} from '../../wailsjs/go/main/App'
+import {Get2String} from '../../wailsjs/go/etcd/EtcdClient'
 
 const data = reactive({
   name: "",
   resultText: "Please enter your name below 👇",
+  jsonContent: "默认占位内容"
 })
 
 function greet() {
@@ -17,6 +19,12 @@ function greet() {
   })
 }
 
+function get() {
+  Get2String(data.name).then(result => {
+    data.jsonContent = result
+  })
+}
+
 </script>
 
 <template>
@@ -24,8 +32,15 @@ function greet() {
     <div id="result" class="result">{{ data.resultText }}</div>
     <div id="input" class="input-box">
       <input id="name" v-model="data.name" autocomplete="off" class="input" type="text"/>
-      <button class="btn" @click="greet">Greet</button>
+      <button class="btn" @click="get">Greet</button>
     </div>
+
+    <el-input
+        type="textarea"
+        :autosize="{ minRows: 2, maxRows: 24}"
+        placeholder="请输入内容"
+        v-model="data.jsonContent">
+    </el-input>
   </main>
 </template>
 
