@@ -21,6 +21,14 @@ var (
 	_etcdCliOnce    sync.Once
 )
 
+func Init() error {
+	_, err := NewEtcdClient()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 type EtcdClient struct {
 	cli *clientv3.Client
 }
@@ -54,20 +62,6 @@ func GetClient() (*clientv3.Client, error) {
 
 func MustGetClient() *clientv3.Client {
 	return _etcdCli
-}
-
-func InitEtcd() error {
-	_etcdCliOnce.Do(func() {
-		client, err := clientv3.New(clientv3.Config{
-			Endpoints:   []string{endpoint},
-			DialTimeout: dialTimeout,
-		})
-		if err != nil {
-			return
-		}
-		_etcdCli = client
-	})
-	return nil
 }
 
 func (e *EtcdClient) etcdOpCtx() (context.Context, context.CancelFunc) {

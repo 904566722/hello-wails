@@ -7,7 +7,9 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 
+	"changeme/pkg/api"
 	etcd2 "changeme/pkg/etcd"
+	"changeme/pkg/sqlite"
 )
 
 //go:embed all:frontend/dist
@@ -16,14 +18,19 @@ var assets embed.FS
 func main() {
 	// Create an instance of the app structure
 	app := NewApp()
-	etcd, err := etcd2.NewEtcdClient()
-	if err != nil {
+	if err := etcd2.Init(); err != nil {
+		panic(err)
+	}
+	if err := sqlite.Init(); err != nil {
 		panic(err)
 	}
 
+	etcdApi := api.NewEtcdApi()
+	etcdClient := etcd2.MustGetEtcdClient()
+
 	// Create application with options
-	err = wails.Run(&options.App{
-		Title:  "hello-wails",
+	err := wails.Run(&options.App{
+		Title:  "hci-etcd",
 		Width:  1024,
 		Height: 768,
 		AssetServer: &assetserver.Options{
@@ -34,7 +41,8 @@ func main() {
 		// 指定向前端暴露哪些结构体方法
 		Bind: []interface{}{
 			app,
-			etcd,
+			etcdApi,
+			etcdClient,
 		},
 	})
 

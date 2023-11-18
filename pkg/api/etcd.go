@@ -92,7 +92,14 @@ func checkActionAllow(kType KeyType, action Action) (bool, string) {
 	return true, ""
 }
 
-func DoAction(req BaseRequest) (BaseResponse, error) {
+type EtcdApi struct {
+}
+
+func NewEtcdApi() *EtcdApi {
+	return &EtcdApi{}
+}
+
+func (e *EtcdApi) DoAction(req BaseRequest) (BaseResponse, error) {
 	allow, reason := checkActionAllow(req.KeyType, req.Action)
 	if !allow {
 		return ErrResp(CodeActionNotAllowed, reason), nil
