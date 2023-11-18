@@ -15,8 +15,10 @@ const (
 )
 
 var (
-	_etcdCli     *clientv3.Client
-	_etcdCliOnce sync.Once
+	_etcdClient     *EtcdClient
+	_etcdClientOnce sync.Once
+	_etcdCli        *clientv3.Client
+	_etcdCliOnce    sync.Once
 )
 
 type EtcdClient struct {
@@ -24,13 +26,20 @@ type EtcdClient struct {
 }
 
 func NewEtcdClient() (*EtcdClient, error) {
-	client, err := GetClient()
-	if err != nil {
-		return nil, err
-	}
-	return &EtcdClient{
-		cli: client,
-	}, nil
+	_etcdClientOnce.Do(func() {
+		client, err := GetClient()
+		if err != nil {
+			panic(err)
+		}
+		_etcdClient = &EtcdClient{
+			cli: client,
+		}
+	})
+	return _etcdClient, nil
+}
+
+func MustGetEtcdClient() *EtcdClient {
+	return _etcdClient
 }
 
 func GetClient() (*clientv3.Client, error) {
