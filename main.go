@@ -23,6 +23,7 @@ func main() {
 	}
 
 	etcdApi := api.NewEtcdApi()
+	opApi := api.NewOperatorApi()
 	etcdClient := etcd2.MustGetEtcdClient()
 
 	// Create application with options
@@ -39,6 +40,7 @@ func main() {
 		Bind: []interface{}{
 			app,
 			etcdApi,
+			opApi,
 			etcdClient,
 		},
 	})

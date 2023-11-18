@@ -13,24 +13,22 @@ var (
 )
 
 type WholeKeyService struct {
-	key     string
 	etcdCli *etcd.EtcdClient
 }
 
-func GetWholeKeyService(key string) *WholeKeyService {
+func GetWholeKeyService() *WholeKeyService {
 	wholeKeyOnce.Do(func() {
 		wholeKeySvc = &WholeKeyService{
-			key:     key,
 			etcdCli: etcd.MustGetEtcdClient(),
 		}
 	})
 	return wholeKeySvc
 }
 
-func (w *WholeKeyService) Get() (string, error) {
-	kv, err := w.etcdCli.Get(w.key)
+func (w *WholeKeyService) Get(key string) (string, error) {
+	kv, err := w.etcdCli.Get(key)
 	if err != nil || kv == nil {
-		return "", fmt.Errorf("get key %s failed: %v", w.key, err)
+		return "", fmt.Errorf("get key %s failed: %v", key, err)
 	}
 	return kv.Value, nil
 }

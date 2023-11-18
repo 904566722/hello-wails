@@ -3,81 +3,11 @@ package api
 import (
 	"fmt"
 
+	"changeme/pkg/log"
+	"changeme/pkg/models"
 	"changeme/pkg/service"
+	"changeme/pkg/sqlite"
 )
-
-type KeyType uint
-
-const (
-	DTypeWholeKey KeyType = iota // 完整的 etcd key
-	DTypePrefix                  // etcd key 的前缀
-	DTypeKeyword                 // etcd key 的关键字
-)
-
-func (d KeyType) String() string {
-	switch d {
-	case DTypeWholeKey:
-		return "DTypeWholeKey"
-	case DTypePrefix:
-		return "DTypePrefix"
-	case DTypeKeyword:
-		return "DTypeKeyword"
-	default:
-		return "Unknown"
-	}
-}
-
-type Action uint
-
-const (
-	ActionGet Action = iota
-	ActionPut
-	ActionDelete
-	ActionListKey   // 获取 key 列表
-	ActionListValue // 获取 value 列表
-	ActionList      // 获取 key 和 value 列表
-)
-
-func (a Action) String() string {
-	switch a {
-	case ActionGet:
-		return "ActionGet"
-	case ActionPut:
-		return "ActionPut"
-	case ActionDelete:
-		return "ActionDelete"
-	case ActionList:
-		return "ActionList"
-	default:
-		return "Unknown"
-	}
-}
-
-// dTypeActionMap 定义 key 类型允许的操作
-var dTypeActionMap = map[KeyType]map[Action]struct{}{
-	// 允许通过完整的 key 进行：1.get 操作；2.put 操作；3.delete 操作；4.list 操作；5.list value 操作
-	DTypeWholeKey: {
-		ActionGet:       struct{}{}, // 允许通过完整的 key 进行 get 操作
-		ActionPut:       struct{}{}, // 允许通过完整的 key 进行 put 操作
-		ActionDelete:    struct{}{}, // 允许通过完整的 key 进行 delete 操作
-		ActionList:      struct{}{}, // 允许通过完整的 key 进行 list 操作
-		ActionListValue: struct{}{}, // 允许通过完整的 key 进行 list value 操作
-	},
-	// 允许通过前缀进行：1.删除所有key对应的值；2.查询所有key；3.查询所有value；4.查询所有key和value
-	DTypePrefix: {
-		ActionDelete:    struct{}{}, // 允许通过前缀进行 delete 操作 (需要询问是否删除全部的key)
-		ActionListKey:   struct{}{}, // 允许通过前缀进行查询所有 key 操作
-		ActionListValue: struct{}{}, // 允许通过前缀进行查询所有 value 操作
-		ActionList:      struct{}{}, // 允许通过前缀进行查询所有 key 和 value 操作
-	},
-	// 允许通过关键字进行：1.删除所有key对应的值；2.查询所有key；3.查询所有value；4.查询所有key和value
-	DTypeKeyword: {
-		ActionDelete:    struct{}{}, // 允许通过关键字进行 delete 操作 (需要询问是否删除全部的key)
-		ActionListKey:   struct{}{}, // 允许通过关键字进行查询所有 key 操作
-		ActionListValue: struct{}{}, // 允许通过关键字进行查询所有 value 操作
-		ActionList:      struct{}{}, // 允许通过关键字进行查询所有 key 和 value 操作
-	},
-}
 
 // return: [是否允许操作，不允许操作的原因]
 func checkActionAllow(kType KeyType, action Action) (bool, string) {
@@ -93,31 +23,50 @@ func checkActionAllow(kType KeyType, action Action) (bool, string) {
 }
 
 type EtcdApi struct {
+	wholeKeySvc *service.WholeKeyService
+
+	opDb *sqlite.OperatorDb
 }
 
 func NewEtcdApi() *EtcdApi {
-	return &EtcdApi{}
+	return &EtcdApi{
+		wholeKeySvc: service.GetWholeKeyService(),
+		opDb:        sqlite.GetOperatorDb(),
+	}
 }
 
-func (e *EtcdApi) DoAction(req BaseRequest) (BaseResponse, error) {
+func (e *EtcdApi) DoAction(req BaseRequest) BaseResponse {
 	allow, reason := checkActionAllow(req.KeyType, req.Action)
 	if !allow {
-		return ErrResp(CodeActionNotAllowed, reason), nil
+		return RespErr(CodeActionNotAllowed, reason)
 	}
 
-	switch req.KeyType {
-	case DTypeWholeKey:
-		switch req.Action {
-		case ActionGet:
-			val, err := service.GetWholeKeyService(req.Data).Get()
-			if err != nil {
-				return ErrResp(CodeFail, err.Error()), nil
-			}
-			return SuccessResp(val), nil
-		default:
-			return ErrResp(CodeFail, fmt.Sprintf("key type %s not support action %s", req.KeyType, req.Action)), nil
+	// add operator record
+	errMsg := ""
+	defer func() {
+		var op *models.Operation
+		if errMsg != "" {
+			op = models.NewOperationFailed(req.KeyType.String(), req.Action.String(), errMsg)
+		} else {
+			op = models.NewOperationSuccess(req.KeyType.String(), req.Action.String())
 		}
+		_ = e.opDb.Insert(op)
+	}()
+	// do action
+	switch e.combTypeAction(req.KeyType, req.Action) {
+	case e.combTypeAction(DTypeWholeKey, ActionGet):
+		val, err := e.wholeKeySvc.Get(req.Data)
+		if err != nil {
+			errMsg = err.Error()
+			log.Log.Errorf("get whole key [%s] failed: [%s], return: [%v]", req.Data, err.Error(), RespErr(CodeFail, err.Error()))
+			return RespErr(CodeFail, err.Error())
+		}
+		return RespSuccess(val)
 	default:
-		return ErrResp(CodeFail, fmt.Sprintf("key type %s not support action %s", req.KeyType, req.Action)), nil
+		return RespErr(CodeFail, fmt.Sprintf("key type [%s] not support action [%s]", req.KeyType, req.Action))
 	}
+}
+
+func (e *EtcdApi) combTypeAction(t KeyType, a Action) string {
+	return fmt.Sprintf("%s_%s", t, a)
 }

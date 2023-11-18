@@ -1,10 +1,26 @@
 export namespace api {
 	
+	export class BaseRequest {
+	    data: string;
+	    keyType: number;
+	    action: number;
 	
+	    static createFrom(source: any = {}) {
+	        return new BaseRequest(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.data = source["data"];
+	        this.keyType = source["keyType"];
+	        this.action = source["action"];
+	    }
+	}
 	export class BaseResponse {
 	    code: number;
 	    message: string;
 	    data: any;
+	    total: number;
 	
 	    static createFrom(source: any = {}) {
 	        return new BaseResponse(source);
@@ -15,6 +31,19 @@ export namespace api {
 	        this.code = source["code"];
 	        this.message = source["message"];
 	        this.data = source["data"];
+	        this.total = source["total"];
+	    }
+	}
+	export class ListRequest {
+	    limit: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new ListRequest(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.limit = source["limit"];
 	    }
 	}
 
