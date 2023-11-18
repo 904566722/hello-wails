@@ -3,6 +3,8 @@ module changeme
 go 1.18
 
 require (
+	github.com/mattn/go-sqlite3 v1.14.18
+	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.8.1
 	github.com/wailsapp/wails/v2 v2.6.0
 	go.etcd.io/etcd/client/v3 v3.5.10
@@ -25,7 +27,6 @@ require (
 	github.com/leaanthony/slicer v1.6.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
-	github.com/mattn/go-sqlite3 v1.14.18 // indirect
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
@@ -44,7 +45,7 @@ require (
 	golang.org/x/crypto v0.14.0 // indirect
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1 // indirect
 	golang.org/x/net v0.17.0 // indirect
-	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/sys v0.14.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	google.golang.org/genproto v0.0.0-20230711160842-782d3b101e98 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20230711160842-782d3b101e98 // indirect

@@ -9,7 +9,7 @@ import (
 
 	"changeme/pkg/api"
 	etcd2 "changeme/pkg/etcd"
-	"changeme/pkg/sqlite"
+	"changeme/pkg/global"
 )
 
 //go:embed all:frontend/dist
@@ -18,10 +18,7 @@ var assets embed.FS
 func main() {
 	// Create an instance of the app structure
 	app := NewApp()
-	if err := etcd2.Init(); err != nil {
-		panic(err)
-	}
-	if err := sqlite.Init(); err != nil {
+	if err := global.Init(); err != nil {
 		panic(err)
 	}
 

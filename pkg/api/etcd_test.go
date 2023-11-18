@@ -10,8 +10,9 @@ import (
 
 func TestDoAction(t *testing.T) {
 	_, err := etcd.NewEtcdClient()
+	api := NewEtcdApi()
 	assert.NoError(t, err)
-	resp, err := DoAction(BaseRequest{
+	resp, err := api.DoAction(BaseRequest{
 		Data:    "hci/phyNetworkPort/phynic-0097AC50A6",
 		KeyType: DTypeWholeKey,
 		Action:  ActionGet,
