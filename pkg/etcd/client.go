@@ -61,6 +61,6 @@ func InitEtcd() error {
 	return nil
 }
 
-func etcdOpCtx() (context.Context, context.CancelFunc) {
+func (e *EtcdClient) etcdOpCtx() (context.Context, context.CancelFunc) {
 	return context.WithTimeout(context.TODO(), etcdOpTimeout)
 }

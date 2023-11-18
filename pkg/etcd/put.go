@@ -6,7 +6,7 @@ import (
 )
 
 func (e *EtcdClient) Put(key, val string) error {
-	ctx, cancel := etcdOpCtx()
+	ctx, cancel := e.etcdOpCtx()
 	defer cancel()
 	_, err := e.cli.Put(ctx, key, val)
 	if err != nil {

@@ -1,12 +1,13 @@
 <script setup>
 import {reactive} from 'vue'
 import {Greet} from '../../wailsjs/go/main/App'
-import {Get2String, PutCompact} from '../../wailsjs/go/etcd/EtcdClient'
+import {Get2String, PutCompact, Del, ListKeyByPrefix, ListKeyByKeyword, ListValueByKeyword} from '../../wailsjs/go/etcd/EtcdClient'
 
 const data = reactive({
   name: "",
-  resultText: "Please enter your name below 👇",
-  jsonContent: "默认占位内容"
+  resultText: "Please enter key below 👇",
+  jsonContent: "默认占位内容",
+  tips: "提示板"
 })
 
 function greet() {
@@ -31,21 +32,65 @@ function put() {
   })
 }
 
+function del() {
+  Del(data.name).then(result => {
+
+  })
+}
+
+function listKeyByPfx() {
+  ListKeyByPrefix(data.name).then(result => {
+    data.jsonContent = result
+  })
+}
+
+function listKeyByKw() {
+  ListKeyByKeyword(data.name).then(result => {
+    data.jsonContent = result
+  })
+}
+
+function listValByKw() {
+  ListValueByKeyword(data.name).then(result => {
+    data.jsonContent = result
+  })
+}
+
 </script>
 
 <template>
   <main>
-    <div id="result" class="result">{{ data.resultText }}</div>
-    <div id="input" class="input-box">
-      <input id="name" v-model="data.name" autocomplete="off" class="input" type="text"/>
-      <button class="btn" @click="get">Get</button>
-      <button class="btn" @click="put">Put</button>
-    </div>
+    <!--  将上面这一部分分为左右两边，把现在的内容都放到左边，右边预留  -->
+    <el-row :gutter="20">
+      <el-col :span="16">
+        <div class="ops">
+          <el-input v-model="data.name" placeholder="请输入「key」「关键字」「前缀」任一种" class="my-input"></el-input>
+          <el-button size="mini" @click="get" type="primary" plain>Get</el-button>
+          <el-button size="mini" @click="put" type="primary" plain>Put</el-button>
+          <el-button size="mini" @click="del" type="danger" plain>Del</el-button>
+          <el-button size="mini" @click="listValByKw">listValByKw</el-button>
+          <el-button size="mini" @click="listKeyByPfx">listByPfx</el-button>
+          <el-button size="mini" @click="listKeyByKw">listByKw</el-button>
+        </div>
+      </el-col>
+      <el-col :span="8">
+        <div class="tips">
+          <el-input
+              type="textarea"
+              :autosize="{ minRows: 3, maxRows: 5}"
+              placeholder="请输入内容"
+              v-model="data.tips"
+              :disabled="true"
+          >
+          </el-input>
+        </div>
+      </el-col>
+    </el-row>
 
     <el-input
         type="textarea"
-        style="margin-top: 20px"
-        :autosize="{ minRows: 2, maxRows: 24}"
+        style="margin-top: 10px"
+        :autosize="{ minRows: 2, maxRows: 30}"
         placeholder="请输入内容"
         v-model="data.jsonContent">
     </el-input>
@@ -53,46 +98,8 @@ function put() {
 </template>
 
 <style scoped>
-.result {
-  height: 20px;
-  line-height: 20px;
-  margin: 1.5rem auto;
+.my-input {
+  margin-bottom: 10px;
 }
 
-.input-box .btn {
-  width: 60px;
-  height: 30px;
-  line-height: 30px;
-  border-radius: 3px;
-  border: none;
-  margin: 0 0 0 20px;
-  padding: 0 8px;
-  cursor: pointer;
-}
-
-.input-box .btn:hover {
-  background-image: linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%);
-  color: #333333;
-}
-
-.input-box .input {
-  border: none;
-  border-radius: 3px;
-  outline: none;
-  height: 30px;
-  line-height: 30px;
-  padding: 0 10px;
-  background-color: rgba(240, 240, 240, 1);
-  -webkit-font-smoothing: antialiased;
-}
-
-.input-box .input:hover {
-  border: none;
-  background-color: rgba(255, 255, 255, 1);
-}
-
-.input-box .input:focus {
-  border: none;
-  background-color: rgba(255, 255, 255, 1);
-}
 </style>

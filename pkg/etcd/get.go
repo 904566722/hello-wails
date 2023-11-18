@@ -6,7 +6,7 @@ import (
 )
 
 func (e *EtcdClient) Get(key string) (*models.KeyVal, error) {
-	ctx, cancel := etcdOpCtx()
+	ctx, cancel := e.etcdOpCtx()
 	defer cancel()
 	resp, err := e.cli.Get(ctx, key)
 	if err != nil {
@@ -23,8 +23,11 @@ func (e *EtcdClient) Get(key string) (*models.KeyVal, error) {
 
 func (e *EtcdClient) Get2String(key string) (string, error) {
 	kv, err := e.Get(key)
-	if err != nil {
+	if err != nil || kv == nil {
 		return "", err
+	}
+	if kv.Value == "" {
+		return "", nil
 	}
 	jsonExpand, err := utils.JQ(kv.Value)
 	if err != nil {
