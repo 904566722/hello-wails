@@ -24,6 +24,7 @@ func main() {
 
 	etcdApi := api.NewEtcdApi()
 	opApi := api.NewOperatorApi()
+	gcApi := api.NewGlobalConfigApi()
 	etcdClient := etcd2.MustGetEtcdClient()
 
 	// Create application with options
@@ -41,6 +42,7 @@ func main() {
 			app,
 			etcdApi,
 			opApi,
+			gcApi,
 			etcdClient,
 		},
 	})

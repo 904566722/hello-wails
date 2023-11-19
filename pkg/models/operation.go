@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"strings"
 	"time"
 )
@@ -16,35 +17,61 @@ type Operation struct {
 	Id       int       `json:"id"`
 	KeyType  string    `json:"keyType"`
 	Action   string    `json:"action"`
+	Key      string    `json:"key"`
+	Value    string    `json:"value"`
 	Result   OpResult  `json:"result"`
 	Message  string    `json:"message"`
+	Desc     string    `json:"desc"`
 	CreateAt time.Time `json:"createAt"`
 }
 
-func NewOperationSuccess(keyType string, action string, message ...string) *Operation {
-	msg := "nil"
+func (o *Operation) fillDesc() {
+	res := "失败"
+	if o.Result == OpSuccess {
+		res = "成功"
+	}
+	o.Desc = fmt.Sprintf("根据「%s」(%s)-> %s%s", Str2KeyType(o.KeyType).Chinese(), o.Key, Str2Action(o.Action).Chinese(), res)
+}
+
+func (o *Operation) String() string {
+	return fmt.Sprintf("Operation{Id: %d, KeyType: %s, Action: %s, Key: %s, Value: %s, Result: %d, Message: %s, Desc: %s, CreateAt: %s}",
+		o.Id, o.KeyType, o.Action, o.Key, o.Value, o.Result, o.Message, o.Desc, o.CreateAt)
+}
+
+func NewOperationSuccess(keyType, action, key, val string, message ...string) *Operation {
+	msg := ""
 	if len(message) != 0 {
 		msg = strings.Join(message, " ")
 	}
-	return &Operation{
+
+	op := &Operation{
 		KeyType:  keyType,
 		Action:   action,
+		Key:      key,
+		Value:    val,
 		Result:   OpSuccess,
 		Message:  msg,
 		CreateAt: time.Now(),
 	}
+	op.fillDesc()
+	return op
 }
 
-func NewOperationFailed(keyType string, action string, message ...string) *Operation {
-	msg := "nil"
+func NewOperationFailed(keyType, action, key, val string, message ...string) *Operation {
+	msg := ""
 	if len(message) != 0 {
 		msg = strings.Join(message, " ")
 	}
-	return &Operation{
+
+	op := &Operation{
 		KeyType:  keyType,
 		Action:   action,
+		Key:      key,
+		Value:    val,
 		Result:   OpFail,
 		Message:  msg,
 		CreateAt: time.Now(),
 	}
+	op.fillDesc()
+	return op
 }

@@ -45,6 +45,7 @@ func (g *GlobalConfigService) InitGlobalConfig() error {
 				return err
 			}
 			log.Log.Info("init global_config success")
+			return nil
 		} else {
 			log.Log.Errorf("select global_config failed: [%v]", err)
 			return err
@@ -64,6 +65,7 @@ func (g *GlobalConfigService) GetConfig() (*models.GlobalConfig, error) {
 }
 
 func (g *GlobalConfigService) Update(gc *models.GlobalConfig) error {
+	gc.Id = gcId
 	if err := g.gcDb.Update(gc); err != nil {
 		return err
 	}

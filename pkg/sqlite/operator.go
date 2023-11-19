@@ -32,11 +32,11 @@ func GetOperatorDb() *OperatorDb {
 func (o *OperatorDb) Insert(op *models.Operation) error {
 	// 插入一条数据
 	insertSQL := `
-		INSERT INTO operators (keyType, action, result, message, createAt)
-		VALUES (?, ?, ?, ?, ?);
+		INSERT INTO operators (keyType, action, key, value, result, message, desc, createAt)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 	`
 
-	_, err := db.Exec(insertSQL, op.KeyType, op.Action, op.Result, op.Message, op.CreateAt)
+	_, err := db.Exec(insertSQL, op.KeyType, op.Action, op.Key, op.Value, op.Result, op.Message, op.Desc, op.CreateAt)
 	if err != nil {
 		log.Log.Errorf("insert operator failed: [%v]", err)
 		return err
@@ -48,7 +48,7 @@ func (o *OperatorDb) Insert(op *models.Operation) error {
 func (o *OperatorDb) List(limit int) ([]*models.Operation, error) {
 	// 根据创建时间查询最新的 limit 条数据
 	querySQL := `
-		SELECT id, keyType, action, result, message, createAt FROM operators
+		SELECT id, keyType, action, key, value, result, message, desc, createAt FROM operators
 		ORDER BY createAt DESC
 		LIMIT ?;
 	`
@@ -62,7 +62,7 @@ func (o *OperatorDb) List(limit int) ([]*models.Operation, error) {
 	var ops []*models.Operation
 	for rows.Next() {
 		op := &models.Operation{}
-		if err := rows.Scan(&op.Id, &op.KeyType, &op.Action, &op.Result, &op.Message, &op.CreateAt); err != nil {
+		if err := rows.Scan(&op.Id, &op.KeyType, &op.Action, &op.Key, &op.Value, &op.Result, &op.Message, &op.Desc, &op.CreateAt); err != nil {
 			log.Log.Errorf("parse operator failed: [%v]", err)
 			return nil, err
 		}

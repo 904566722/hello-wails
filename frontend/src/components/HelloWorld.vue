@@ -1,9 +1,11 @@
 <script setup>
-import {reactive} from 'vue'
+import {reactive, onMounted} from 'vue'
 import {Get2String, PutCompact, Del, ListKeyByPrefix, ListKeyByKeyword, ListValueByKeyword} from '../../wailsjs/go/etcd/EtcdClient'
 import {DoAction} from "../../wailsjs/go/api/EtcdApi"
 import {List as ListOps} from "../../wailsjs/go/api/OperatorApi";
+import {Get as GetGlobalConfig, Set as SetGlobalConfig} from "../../wailsjs/go/api/GlobalConfigApi";
 import {ElMessage} from "element-plus";
+import {Setting} from "@element-plus/icons-vue";
 
 const KTypeWholeKey = 0
 const KTypePrefix = 1
@@ -21,13 +23,16 @@ const data = reactive({
   keyType: KTypeWholeKey,
   action: ATypeGet,
 
+  jsonFmt: true,
+
   resultText: "Please enter key below 👇",
   jsonContent: "默认占位内容",
   tips: "提示板",
 
 
   doActionReq: {
-    data: "",
+    key: "",
+    value: "",
     keyType: KTypeWholeKey,
     action: ATypeGet,
   },
@@ -37,16 +42,40 @@ const data = reactive({
     limit: 10,
   },
   opHistory: [],
+
+  // ui controller
+  settingPage: false
+
 })
 
-// 刷新请求内容
-// todo: delete code
-function freshReqContent() {
-  data.doActionReq = {
-    data: data.name,
-    keyType: data.keyType,
-    action: data.action,
+onMounted(() => {
+  getGlobalConfig()
+})
+
+
+function getGlobalConfig() {
+  GetGlobalConfig().then(result => {
+    // 如果 result.code 不为 200，弹窗提示
+    if (result.code !== 200) {
+      ElMessage.error(result.message)
+      return
+    }
+    data.jsonFmt = result.data.jsonFormat
+  })
+}
+
+function saveGlobalConfig() {
+  let req = {
+    jsonFormat: data.jsonFmt,
   }
+  SetGlobalConfig(req).then(result => {
+    // 如果 result.code 不为 200，弹窗提示
+    if (result.code !== 200) {
+      ElMessage.error(result.message)
+      return
+    }
+    ElMessage.success(result.message)
+  })
 }
 
 function doAction() {
@@ -56,6 +85,7 @@ function doAction() {
       ElMessage.error(result.message)
       return
     }
+    console.log(result.data)
     data.jsonContent = result.data
     ElMessage.success(result.message)
   })
@@ -75,44 +105,68 @@ function listOps() {
   })
 }
 
+// get 根据完整的 key 获取 value
 function get() {
-  data.doActionReq = {
-    data: data.name,
-    keyType: KTypeWholeKey,
-    action: ATypeGet,
-  }
-
+  data.doActionReq.keyType = KTypeWholeKey
+  data.doActionReq.action = ATypeGet
   doAction()
 }
 
+// put 根据完整的 key 更新 value
 function put() {
-  PutCompact(data.name, data.jsonContent).then(result => {
-
-  })
+  data.doActionReq.keyType = KTypeWholeKey
+  data.doActionReq.action = ATypePut
+  data.doActionReq.value = data.jsonContent
+  doAction()
 }
 
+// del 根据完整的 key 删除 value
 function del() {
-  Del(data.name).then(result => {
-
-  })
+  data.doActionReq.keyType = KTypeWholeKey
+  data.doActionReq.action = ATypeDel
+  doAction()
 }
 
+// listKeyByPfx 根据前缀获取 key 列表
 function listKeyByPfx() {
-  ListKeyByPrefix(data.name).then(result => {
-    data.jsonContent = result
-  })
+  data.doActionReq.keyType = KTypePrefix
+  data.doActionReq.action = ATypeListKey
+  doAction()
 }
 
+// listValByPfx 根据前缀获取 value 列表
+function listValByPfx() {
+  data.doActionReq.keyType = KTypePrefix
+  data.doActionReq.action = ATypeListVal
+  doAction()
+}
+
+// delByPfx 根据前缀删除 key-value
+function delByPfx() {
+  data.doActionReq.keyType = KTypePrefix
+  data.doActionReq.action = ATypeDel
+  doAction()
+}
+
+// listKeyByKw 根据关键字获取 key 列表
 function listKeyByKw() {
-  ListKeyByKeyword(data.name).then(result => {
-    data.jsonContent = result
-  })
+  data.doActionReq.keyType = KTypeKeyword
+  data.doActionReq.action = ATypeListKey
+  doAction()
 }
 
+// listValByKw 根据关键字获取 value 列表
 function listValByKw() {
-  ListValueByKeyword(data.name).then(result => {
-    data.jsonContent = result
-  })
+  data.doActionReq.keyType = KTypeKeyword
+  data.doActionReq.action = ATypeListVal
+  doAction()
+}
+
+// delByKw 根据关键字删除 key-value
+function delByKw() {
+  data.doActionReq.keyType = KTypeKeyword
+  data.doActionReq.action = ATypeDel
+  doAction()
 }
 
 function opHistoryTableRowClassName({row, rowIndex}) {
@@ -138,14 +192,30 @@ function formatDate(dateString) {
     <el-row :gutter="20">
       <el-col :span="12">
         <div class="ops">
-          <el-input v-model="data.name" placeholder="请输入「key」「关键字」「前缀」任一种" class="my-input"></el-input>
-          <el-button size="small" @click="get" type="primary" plain>Get</el-button>
-          <el-button size="small" @click="put" type="primary" plain>Put</el-button>
-          <el-button size="small" @click="del" type="danger" plain>Del</el-button>
-          <el-button size="small" @click="listValByKw">listValByKw</el-button>
-          <el-button size="small" @click="listKeyByPfx">listByPfx</el-button>
-          <el-button size="small" @click="listKeyByKw">listByKw</el-button>
+          <el-input v-model="data.doActionReq.key" placeholder="请输入「key」「关键字」「前缀」任一种" class="my-input"></el-input>
+          <div id="whole-key">
+            <el-button size="small" @click="get" type="primary" plain>Get</el-button>
+            <el-button size="small" @click="put" type="primary" plain>Put</el-button>
+            <el-button size="small" @click="del" type="danger" plain>Del</el-button>
+          </div>
+          <div id="prefix-key">
+            <el-button size="small" @click="listKeyByPfx">listKey</el-button>
+            <el-button size="small" @click="listValByPfx">listVal</el-button>
+            <el-button size="small" @click="delByPfx">del</el-button>
+          </div>
+          <div id="keyword-key">
+            <el-button size="small" @click="listKeyByKw">listKey</el-button>
+            <el-button size="small" @click="listValByKw">listVal</el-button>
+            <el-button size="small" @click="delByKw">del</el-button>
+          </div>
         </div>
+        <el-switch
+            v-model="data.jsonFmt"
+            class="mb-2"
+            inactive-text="压缩"
+            active-text="格式化"
+        />
+        <el-button type="info" :icon="Setting" circle @click="data.settingPage = true"/>
       </el-col>
       <el-col :span="12">
         <div class="tips">
@@ -163,8 +233,7 @@ function formatDate(dateString) {
               height="250"
               :row-class-name="opHistoryTableRowClassName">
             <el-table-column label="Id" prop="id" fixed></el-table-column>
-            <el-table-column label="KeyType" prop="keyType"></el-table-column>
-            <el-table-column label="Action" prop="action"></el-table-column>
+            <el-table-column label="描述" prop="desc"></el-table-column>
             <el-table-column label="Result" prop="result"></el-table-column>
             <el-table-column label="Message" prop="message"></el-table-column>
             <el-table-column label="CreateAt" prop="createAt">
@@ -192,6 +261,24 @@ function formatDate(dateString) {
         placeholder="请输入内容"
         v-model="data.jsonContent">
     </el-input>
+
+    <!--  全局配置  -->
+    <el-drawer
+        v-model="data.settingPage"
+        title="global setting"
+    >
+      <el-form label-width="120px">
+        <el-form-item label="json format">
+          <el-switch
+              v-model="data.jsonFmt"
+              inactive-text="压缩"
+              active-text="格式化"
+          />
+        </el-form-item>
+      </el-form>
+
+      <el-button type="primary" plain @click="saveGlobalConfig">Save</el-button>
+    </el-drawer>
   </main>
 </template>
 

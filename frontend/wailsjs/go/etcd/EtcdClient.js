@@ -6,6 +6,14 @@ export function Del(arg1) {
   return window['go']['etcd']['EtcdClient']['Del'](arg1);
 }
 
+export function DelByKeyword(arg1) {
+  return window['go']['etcd']['EtcdClient']['DelByKeyword'](arg1);
+}
+
+export function DelByPrefix(arg1) {
+  return window['go']['etcd']['EtcdClient']['DelByPrefix'](arg1);
+}
+
 export function Get(arg1) {
   return window['go']['etcd']['EtcdClient']['Get'](arg1);
 }
@@ -22,8 +30,16 @@ export function ListKeyByPrefix(arg1) {
   return window['go']['etcd']['EtcdClient']['ListKeyByPrefix'](arg1);
 }
 
+export function ListKeyValueByPrefix(arg1) {
+  return window['go']['etcd']['EtcdClient']['ListKeyValueByPrefix'](arg1);
+}
+
 export function ListValueByKeyword(arg1) {
   return window['go']['etcd']['EtcdClient']['ListValueByKeyword'](arg1);
+}
+
+export function ListValueByPrefix(arg1) {
+  return window['go']['etcd']['EtcdClient']['ListValueByPrefix'](arg1);
 }
 
 export function Put(arg1, arg2) {

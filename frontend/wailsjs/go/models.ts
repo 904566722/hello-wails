@@ -1,7 +1,27 @@
-export namespace api {
+export namespace main {
+	
+	export class Person {
+	    name: string;
+	    nickName: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new Person(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.name = source["name"];
+	        this.nickName = source["nickName"];
+	    }
+	}
+
+}
+
+export namespace models {
 	
 	export class BaseRequest {
-	    data: string;
+	    key: string;
+	    value: string;
 	    keyType: number;
 	    action: number;
 	
@@ -11,7 +31,8 @@ export namespace api {
 	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.data = source["data"];
+	        this.key = source["key"];
+	        this.value = source["value"];
 	        this.keyType = source["keyType"];
 	        this.action = source["action"];
 	    }
@@ -34,42 +55,18 @@ export namespace api {
 	        this.total = source["total"];
 	    }
 	}
-	export class ListRequest {
-	    limit: number;
+	export class GlobalConfigReq {
+	    jsonFormat: boolean;
 	
 	    static createFrom(source: any = {}) {
-	        return new ListRequest(source);
+	        return new GlobalConfigReq(source);
 	    }
 	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.limit = source["limit"];
+	        this.jsonFormat = source["jsonFormat"];
 	    }
 	}
-
-}
-
-export namespace main {
-	
-	export class Person {
-	    name: string;
-	    nickName: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new Person(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.name = source["name"];
-	        this.nickName = source["nickName"];
-	    }
-	}
-
-}
-
-export namespace models {
-	
 	export class KeyVal {
 	    key: string;
 	    value: string;
@@ -82,6 +79,18 @@ export namespace models {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.key = source["key"];
 	        this.value = source["value"];
+	    }
+	}
+	export class ListRequest {
+	    limit: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new ListRequest(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.limit = source["limit"];
 	    }
 	}
 

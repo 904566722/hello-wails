@@ -1,6 +1,10 @@
 package api
 
 import (
+	"github.com/sirupsen/logrus"
+
+	"changeme/pkg/log"
+	"changeme/pkg/models"
 	"changeme/pkg/sqlite"
 )
 
@@ -14,12 +18,15 @@ func NewOperatorApi() *OperatorApi {
 	}
 }
 
-func (o *OperatorApi) List(req ListRequest) BaseResponse {
+func (o *OperatorApi) List(req models.ListRequest) models.BaseResponse {
 	defer recoverFromPanic()
 
 	ops, err := o.opDb.List(req.Limit)
 	if err != nil {
-		return RespErr(CodeFail, err.Error())
+		return RespErr(models.CodeFail, err.Error())
 	}
+	log.Log.WithFields(logrus.Fields{
+		"ops": ops,
+	}).Info("list operator success")
 	return RespSuccess(ops)
 }

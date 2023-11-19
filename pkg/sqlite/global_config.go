@@ -3,6 +3,8 @@ package sqlite
 import (
 	"sync"
 
+	"github.com/sirupsen/logrus"
+
 	"changeme/pkg/log"
 	"changeme/pkg/models"
 )
@@ -25,8 +27,8 @@ func GetGlobalConfigDb() *GlobalConfigDb {
 func (g *GlobalConfigDb) Select(id int) (*models.GlobalConfig, error) {
 	// 根据 id 查询一条数据
 	querySQL := `
-		SELECT id, jsonFormat FROM global_config
-		WHERE id = ?;
+		select id, jsonFormat from global_config
+		where id = ?;
 	`
 
 	rows, err := db.Query(querySQL, id)
@@ -36,22 +38,17 @@ func (g *GlobalConfigDb) Select(id int) (*models.GlobalConfig, error) {
 	}
 	defer rows.Close()
 
-	// 如果未找到该条数据，返回 nil
-	if !rows.Next() {
-		return nil, ErrValueNotFound
-	}
-
-	// 解析该条数据
-	gc := &models.GlobalConfig{}
 	for rows.Next() {
+		gc := &models.GlobalConfig{}
 		err = rows.Scan(&gc.Id, &gc.JsonFormat)
 		if err != nil {
 			log.Log.Errorf("scan global_config failed: [%v]", err)
 			return nil, err
 		}
+		return gc, nil
 	}
 
-	return gc, nil
+	return nil, ErrValueNotFound
 }
 
 func (g *GlobalConfigDb) Insert(gc *models.GlobalConfig) error {
@@ -80,5 +77,8 @@ func (g *GlobalConfigDb) Update(gc *models.GlobalConfig) error {
 		log.Log.Errorf("update global_config failed: [%v]", err)
 		return err
 	}
+	log.Log.WithFields(logrus.Fields{
+		"jsonFormat": gc.JsonFormat,
+	}).Info("update global_config success")
 	return nil
 }

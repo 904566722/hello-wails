@@ -43,8 +43,11 @@ func initOperatorTable(db *sql.DB) error {
 		    id INTEGER PRIMARY KEY AUTOINCREMENT,
 			keyType TEXT,	
 			action TEXT,
+			key TEXT,
+    		value TEXT,
 			result INTEGER NOT NULL,
 			message TEXT,
+			desc TEXT,
 			createAt TIMESTAMP
 		);
 	`)

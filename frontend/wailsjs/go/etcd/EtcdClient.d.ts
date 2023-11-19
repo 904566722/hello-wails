@@ -4,15 +4,23 @@ import {models} from '../models';
 
 export function Del(arg1:string):Promise<void>;
 
+export function DelByKeyword(arg1:string):Promise<number>;
+
+export function DelByPrefix(arg1:string):Promise<number>;
+
 export function Get(arg1:string):Promise<models.KeyVal>;
 
 export function Get2String(arg1:string):Promise<string>;
 
-export function ListKeyByKeyword(arg1:string):Promise<string>;
+export function ListKeyByKeyword(arg1:string):Promise<Array<string>>;
 
-export function ListKeyByPrefix(arg1:string):Promise<string>;
+export function ListKeyByPrefix(arg1:string):Promise<Array<string>>;
 
-export function ListValueByKeyword(arg1:string):Promise<string>;
+export function ListKeyValueByPrefix(arg1:string):Promise<Array<models.KeyVal>>;
+
+export function ListValueByKeyword(arg1:string):Promise<Array<string>>;
+
+export function ListValueByPrefix(arg1:string):Promise<Array<string>>;
 
 export function Put(arg1:string,arg2:string):Promise<void>;
 
