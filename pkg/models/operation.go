@@ -15,8 +15,8 @@ const (
 
 type Operation struct {
 	Id       int       `json:"id"`
-	KeyType  string    `json:"keyType"`
-	Action   string    `json:"action"`
+	KeyType  KeyType   `json:"keyType"`
+	Action   Action    `json:"action"`
 	Key      string    `json:"key"`
 	Value    string    `json:"value"`
 	Result   OpResult  `json:"result"`
@@ -30,7 +30,7 @@ func (o *Operation) fillDesc() {
 	if o.Result == OpSuccess {
 		res = "成功"
 	}
-	o.Desc = fmt.Sprintf("根据「%s」(%s)-> %s%s", Str2KeyType(o.KeyType).Chinese(), o.Key, Str2Action(o.Action).Chinese(), res)
+	o.Desc = fmt.Sprintf("根据「%s」(%s)-> %s%s", o.KeyType.Chinese(), o.Key, o.Action.Chinese(), res)
 }
 
 func (o *Operation) String() string {
@@ -38,7 +38,7 @@ func (o *Operation) String() string {
 		o.Id, o.KeyType, o.Action, o.Key, o.Value, o.Result, o.Message, o.Desc, o.CreateAt)
 }
 
-func NewOperationSuccess(keyType, action, key, val string, message ...string) *Operation {
+func NewOperationSuccess(keyType KeyType, action Action, key, val string, message ...string) *Operation {
 	msg := ""
 	if len(message) != 0 {
 		msg = strings.Join(message, " ")
@@ -57,7 +57,7 @@ func NewOperationSuccess(keyType, action, key, val string, message ...string) *O
 	return op
 }
 
-func NewOperationFailed(keyType, action, key, val string, message ...string) *Operation {
+func NewOperationFailed(keyType KeyType, action Action, key, val string, message ...string) *Operation {
 	msg := ""
 	if len(message) != 0 {
 		msg = strings.Join(message, " ")

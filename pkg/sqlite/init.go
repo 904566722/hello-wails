@@ -41,8 +41,8 @@ func initOperatorTable(db *sql.DB) error {
 	_, err := db.Exec(`
 		CREATE TABLE IF NOT EXISTS operators (
 		    id INTEGER PRIMARY KEY AUTOINCREMENT,
-			keyType TEXT,	
-			action TEXT,
+			keyType INTEGER,	
+			action INTEGER,
 			key TEXT,
     		value TEXT,
 			result INTEGER NOT NULL,

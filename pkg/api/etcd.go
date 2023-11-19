@@ -82,9 +82,9 @@ func (e *EtcdApi) DoAction(req mdl.BaseRequest) mdl.BaseResponse {
 	defer func() {
 		var op *mdl.Operation
 		if err != nil {
-			op = mdl.NewOperationFailed(req.KeyType.String(), req.Action.String(), req.Key, req.Value, err.Error())
+			op = mdl.NewOperationFailed(req.KeyType, req.Action, req.Key, req.Value, err.Error())
 		} else {
-			op = mdl.NewOperationSuccess(req.KeyType.String(), req.Action.String(), req.Key, req.Value)
+			op = mdl.NewOperationSuccess(req.KeyType, req.Action, req.Key, req.Value)
 		}
 		_ = e.opDb.Insert(op)
 	}()
