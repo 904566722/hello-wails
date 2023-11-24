@@ -2,34 +2,39 @@ package sqlite
 
 import (
 	"database/sql"
+	"path/filepath"
 
 	_ "github.com/mattn/go-sqlite3"
 
+	"changeme/pkg/consts"
 	"changeme/pkg/log"
 )
+
+var dbFile = filepath.Join(consts.AppFilePath, consts.DbName)
 
 var db *sql.DB
 
 func Init() error {
 	var err error
-	db, err = sql.Open("sqlite3", "./foo.db")
+	log.Infof("db file: %s", dbFile)
+	db, err = sql.Open("sqlite3", dbFile)
 	if err != nil {
 		return err
 	}
 	defer db.Close()
 
 	if err := initOperatorTable(db); err != nil {
-		log.Log.Errorf("init operator table failed: %v", err)
+		log.Errorf("init operator table failed: %v", err)
 		return err
 	}
 
 	if err := initGlobalConfigTable(db); err != nil {
-		log.Log.Errorf("init global config table failed: %v", err)
+		log.Errorf("init global config table failed: %v", err)
 		return err
 	}
 
 	if err := open(); err != nil {
-		log.Log.Errorf("open sqlite failed: %v", err)
+		log.Errorf("open sqlite failed: %v", err)
 		return err
 	}
 
@@ -62,6 +67,7 @@ func initGlobalConfigTable(db *sql.DB) error {
 	_, err := db.Exec(`
 		CREATE TABLE IF NOT EXISTS global_config (
 		    id INTEGER PRIMARY KEY AUTOINCREMENT,
+		    etcdEndPoint TEXT,
 			jsonFormat INTEGER
 		);
 	`)
@@ -73,7 +79,7 @@ func initGlobalConfigTable(db *sql.DB) error {
 
 func open() error {
 	var err error
-	db, err = sql.Open("sqlite3", "./foo.db")
+	db, err = sql.Open("sqlite3", dbFile)
 	if err != nil {
 		return err
 	}

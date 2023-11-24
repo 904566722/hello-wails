@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"strings"
 
 	"changeme/pkg/log"
 	mdl "changeme/pkg/models"
@@ -52,6 +53,7 @@ type EtcdApi struct {
 	wholeKeySvc  *service.WholeKeyService
 	prefixKeySvc *service.PrefixKeyService
 	keywordSvc   *service.KeywordService
+	etcdCliSvc   *service.EtcdClientService
 
 	opDb *sqlite.OperatorDb
 }
@@ -61,6 +63,7 @@ func NewEtcdApi() *EtcdApi {
 		wholeKeySvc:  service.GetWholeKeyService(),
 		prefixKeySvc: service.GetPrefixKeyService(),
 		keywordSvc:   service.GetKeywordService(),
+		etcdCliSvc:   service.GetEtcdClientService(),
 		opDb:         sqlite.GetOperatorDb(),
 	}
 }
@@ -71,7 +74,7 @@ func (e *EtcdApi) DoAction(req mdl.BaseRequest) mdl.BaseResponse {
 		return RespErr(mdl.CodeActionNotAllowed, reason)
 	}
 
-	log.Log.Debugf("do action: [%s] [%s] [%s] [%s]", req.KeyType, req.Action, req.Key, req.Value)
+	log.Debugf("do action: [%s] [%s] [%s] [%s]", req.KeyType, req.Action, req.Key, req.Value)
 
 	var (
 		err      error
@@ -80,6 +83,11 @@ func (e *EtcdApi) DoAction(req mdl.BaseRequest) mdl.BaseResponse {
 
 	// add operator record
 	defer func() {
+		if req.DoByOpHistory {
+			// 如果是通过操作历史进行操作，则不再记录操作历史
+			return
+		}
+
 		var op *mdl.Operation
 		if err != nil {
 			op = mdl.NewOperationFailed(req.KeyType, req.Action, req.Key, req.Value, err.Error())
@@ -96,7 +104,7 @@ func (e *EtcdApi) DoAction(req mdl.BaseRequest) mdl.BaseResponse {
 		return e.ret(finalVal, err)
 	case e.combTypeAction(mdl.DTypeWholeKey, mdl.ActionPut):
 		err = e.wholeKeySvc.Put(req.Key, req.Value)
-		return e.ret(nil, err)
+		return e.ret(req.Value, err)
 	case e.combTypeAction(mdl.DTypeWholeKey, mdl.ActionDelete):
 		err = e.wholeKeySvc.Del(req.Key)
 		return e.ret(nil, err)
@@ -140,7 +148,7 @@ func (e *EtcdApi) combTypeAction(t mdl.KeyType, a mdl.Action) string {
 
 func (e *EtcdApi) ret(val interface{}, err error) mdl.BaseResponse {
 	if err != nil {
-		log.Log.Errorf("do action failed: [%v]", err)
+		log.Errorf("do action failed: [%v]", err)
 		return RespErr(mdl.CodeFail, err.Error())
 	}
 	return RespSuccess(val)
@@ -148,4 +156,19 @@ func (e *EtcdApi) ret(val interface{}, err error) mdl.BaseResponse {
 
 func (e *EtcdApi) delMsg(kType mdl.KeyType, key string, delCnt int64) string {
 	return fmt.Sprintf("根据「%s」(%s)共删除 %d 条记录", kType.Chinese(), key, delCnt)
+}
+
+func (e *EtcdApi) TestConnecting(endpoint string) mdl.BaseResponse {
+	if endpoint == "" {
+		return RespErr(mdl.CodeFail, "endpoint is empty")
+	}
+	// 校验 endpoint 格式 是否严格符合 ip:port
+	endpoint = strings.TrimSpace(endpoint)
+	if !strings.Contains(endpoint, ":") {
+		return RespErr(mdl.CodeFail, "endpoint format error")
+	}
+	if err := e.etcdCliSvc.TestConnecting(endpoint); err != nil {
+		return RespErr(mdl.CodeFail, err.Error())
+	}
+	return RespSuccess(fmt.Sprintf("connect to %s success", endpoint))
 }

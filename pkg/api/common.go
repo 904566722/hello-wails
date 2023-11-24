@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"runtime/debug"
 
-	"changeme/pkg/global"
 	"changeme/pkg/log"
 	"changeme/pkg/models"
+	"changeme/pkg/service"
 	"changeme/pkg/utils"
 )
 
@@ -69,24 +69,24 @@ func RespErr(code int, msg string) models.BaseResponse {
 
 func recoverFromPanic() {
 	if err := recover(); err != nil {
-		log.Log.Errorf("panic: [%v]", err)
+		log.Errorf("panic: [%v]", err)
 		debug.PrintStack()
 	}
 }
 
 func FormatValue(val string) (string, error) {
-	if global.GlobalConfig.JsonFormat {
-		jsonVal, err := utils.JQ(val)
+	if service.GlobalConfig.JsonFormat {
+		unCompact, err := utils.UnCompact(val)
 		if err != nil {
 			return "", fmt.Errorf("format value failed: %w", err)
 		}
-		return jsonVal, nil
+		return unCompact, nil
 	}
 	return val, nil
 }
 
 func FormatValues(vals []string) ([]string, error) {
-	if !global.GlobalConfig.JsonFormat {
+	if !service.GlobalConfig.JsonFormat {
 		return vals, nil
 	}
 	var ret []string

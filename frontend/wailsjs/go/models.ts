@@ -24,6 +24,7 @@ export namespace models {
 	    value: string;
 	    keyType: number;
 	    action: number;
+	    doByOpHistory: boolean;
 	
 	    static createFrom(source: any = {}) {
 	        return new BaseRequest(source);
@@ -35,6 +36,7 @@ export namespace models {
 	        this.value = source["value"];
 	        this.keyType = source["keyType"];
 	        this.action = source["action"];
+	        this.doByOpHistory = source["doByOpHistory"];
 	    }
 	}
 	export class BaseResponse {
@@ -57,6 +59,7 @@ export namespace models {
 	}
 	export class GlobalConfigReq {
 	    jsonFormat: boolean;
+	    etcdEndPoint: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new GlobalConfigReq(source);
@@ -65,20 +68,7 @@ export namespace models {
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.jsonFormat = source["jsonFormat"];
-	    }
-	}
-	export class KeyVal {
-	    key: string;
-	    value: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new KeyVal(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.key = source["key"];
-	        this.value = source["value"];
+	        this.etcdEndPoint = source["etcdEndPoint"];
 	    }
 	}
 	export class ListRequest {
@@ -91,6 +81,20 @@ export namespace models {
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.limit = source["limit"];
+	    }
+	}
+	export class ReqJsonDiff {
+	    old: string;
+	    new: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new ReqJsonDiff(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.old = source["old"];
+	        this.new = source["new"];
 	    }
 	}
 

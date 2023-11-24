@@ -1,14 +1,21 @@
 package models
 
 type GlobalConfigReq struct {
-	JsonFormat bool `json:"jsonFormat"`
+	JsonFormat   bool   `json:"jsonFormat"`
+	EtcdEndPoint string `json:"etcdEndPoint"`
+}
+
+type ReqJsonDiff struct {
+	Old string `json:"old"`
+	New string `json:"new"`
 }
 
 type BaseRequest struct {
-	Key     string  `json:"key"`
-	Value   string  `json:"value"`
-	KeyType KeyType `json:"keyType"`
-	Action  Action  `json:"action"`
+	Key           string  `json:"key"`
+	Value         string  `json:"value"`
+	KeyType       KeyType `json:"keyType"`
+	Action        Action  `json:"action"`
+	DoByOpHistory bool    `json:"doByOpHistory"` // 是否通过操作历史来执行
 }
 
 type Options struct {

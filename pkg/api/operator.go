@@ -1,8 +1,6 @@
 package api
 
 import (
-	"github.com/sirupsen/logrus"
-
 	"changeme/pkg/log"
 	"changeme/pkg/models"
 	"changeme/pkg/sqlite"
@@ -25,8 +23,8 @@ func (o *OperatorApi) List(req models.ListRequest) models.BaseResponse {
 	if err != nil {
 		return RespErr(models.CodeFail, err.Error())
 	}
-	log.Log.WithFields(logrus.Fields{
+	log.DebugWithFields(map[string]interface{}{
 		"ops": ops,
-	}).Info("list operator success")
+	}, "list operator success")
 	return RespSuccess(ops)
 }

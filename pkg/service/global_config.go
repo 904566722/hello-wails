@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"strings"
 	"sync"
 
 	"changeme/pkg/log"
@@ -13,8 +14,11 @@ const (
 	gcId = 1
 )
 
+var GlobalConfig models.GlobalConfig
+
 type GlobalConfigService struct {
-	gcDb *sqlite.GlobalConfigDb
+	gcDb       *sqlite.GlobalConfigDb
+	etcdCliSvc *EtcdClientService
 }
 
 var (
@@ -25,7 +29,8 @@ var (
 func GetGlobalConfigService() *GlobalConfigService {
 	globalConfigSvcOnce.Do(func() {
 		globalConfigSvc = &GlobalConfigService{
-			gcDb: sqlite.GetGlobalConfigDb(),
+			gcDb:       sqlite.GetGlobalConfigDb(),
+			etcdCliSvc: GetEtcdClientService(),
 		}
 	})
 	return globalConfigSvc
@@ -38,21 +43,22 @@ func (g *GlobalConfigService) InitGlobalConfig() error {
 			// 如果不存在，则初始化一条数据
 			// todo
 			gc := &models.GlobalConfig{
-				JsonFormat: false,
+				JsonFormat:   false,
+				EtcdEndPoint: "localhost:2379",
 			}
 			if err := g.gcDb.Insert(gc); err != nil {
-				log.Log.Errorf("insert global_config failed: [%v]", err)
+				log.Errorf("insert global_config failed: [%v]", err)
 				return err
 			}
-			log.Log.Info("init global_config success")
+			log.Info("init global_config success")
 			return nil
 		} else {
-			log.Log.Errorf("select global_config failed: [%v]", err)
+			log.Errorf("select global_config failed: [%v]", err)
 			return err
 		}
 	}
 	// 已经存在
-	log.Log.Debugf("global_config already exist")
+	log.Debugf("global_config already exist")
 	return nil
 }
 
@@ -69,5 +75,24 @@ func (g *GlobalConfigService) Update(gc *models.GlobalConfig) error {
 	if err := g.gcDb.Update(gc); err != nil {
 		return err
 	}
+	return nil
+}
+
+func (g *GlobalConfigService) Sync() error {
+	gc, err := g.gcDb.Select(gcId)
+	if err != nil {
+		return err
+	}
+	GlobalConfig = *gc
+
+	oldEps := strings.Join(g.etcdCliSvc.GetEndPoints(), ";")
+	if !strings.Contains(oldEps, GlobalConfig.EtcdEndPoint) {
+		if err := g.etcdCliSvc.ChangeEp(gc.EtcdEndPoint); err != nil {
+			return err
+		} else {
+			log.Infof("sync global config success, etcd endpoint change from [%s] to [%s]", oldEps, GlobalConfig)
+		}
+	}
+
 	return nil
 }

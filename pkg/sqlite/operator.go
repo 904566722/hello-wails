@@ -38,10 +38,10 @@ func (o *OperatorDb) Insert(op *models.Operation) error {
 
 	_, err := db.Exec(insertSQL, op.KeyType, op.Action, op.Key, op.Value, op.Result, op.Message, op.Desc, op.CreateAt)
 	if err != nil {
-		log.Log.Errorf("insert operator failed: [%v]", err)
+		log.Errorf("insert operator failed: [%v]", err)
 		return err
 	}
-	log.Log.Debugf("insert operator success: [%v]", op)
+	log.Debugf("insert operator success: [%v]", op)
 	return nil
 }
 
@@ -55,7 +55,7 @@ func (o *OperatorDb) List(limit int) ([]*models.Operation, error) {
 
 	rows, err := db.Query(querySQL, limit)
 	if err != nil {
-		log.Log.Errorf("query operator failed: [%v]", err)
+		log.Errorf("query operator failed: [%v]", err)
 		return nil, err
 	}
 
@@ -63,13 +63,13 @@ func (o *OperatorDb) List(limit int) ([]*models.Operation, error) {
 	for rows.Next() {
 		op := &models.Operation{}
 		if err := rows.Scan(&op.Id, &op.KeyType, &op.Action, &op.Key, &op.Value, &op.Result, &op.Message, &op.Desc, &op.CreateAt); err != nil {
-			log.Log.Errorf("parse operator failed: [%v]", err)
+			log.Errorf("parse operator failed: [%v]", err)
 			return nil, err
 		}
 		ops = append(ops, op)
 	}
 	if err := rows.Err(); err != nil {
-		log.Log.Errorf("error happened when range rows: [%v]", err)
+		log.Errorf("error happened when range rows: [%v]", err)
 		return nil, err
 	}
 	return ops, nil

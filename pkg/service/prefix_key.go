@@ -30,7 +30,7 @@ func (p *PrefixKeyService) Del(pfx string) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	log.Log.Infof("delete by prefix key: [%s], del number: [%d]", pfx, n)
+	log.Infof("delete by prefix key: [%s], del number: [%d]", pfx, n)
 	return n, nil
 }
 
@@ -43,7 +43,7 @@ func (p *PrefixKeyService) ListKey(pfx string) ([]string, error) {
 }
 
 func (p *PrefixKeyService) ListValue(pfx string) ([]string, error) {
-	values, err := p.etcdCli.ListValueByKeyword(pfx)
+	values, err := p.etcdCli.ListValueByPrefix(pfx)
 	if err != nil {
 		return nil, err
 	}

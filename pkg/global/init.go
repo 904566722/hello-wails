@@ -1,39 +1,50 @@
 package global
 
 import (
+	"os"
+
+	"changeme/pkg/consts"
 	"changeme/pkg/etcd"
 	"changeme/pkg/log"
-	"changeme/pkg/models"
 	"changeme/pkg/service"
 	"changeme/pkg/sqlite"
 )
 
-var GlobalConfig models.GlobalConfig
-
 func Init() error {
+	// 如果目录不存在，递归创建该目录
+	_, err := os.Stat(consts.AppFilePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			err := os.MkdirAll(consts.AppFilePath, 0755)
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+
 	if err := log.Init(); err != nil {
 		return err
 	}
 	if err := etcd.Init(); err != nil {
-		log.Log.Errorf("etcd init failed: %v", err)
+		log.Errorf("etcd init failed: %v", err)
 		return err
 	}
 	if err := sqlite.Init(); err != nil {
-		log.Log.Errorf("sqlite init failed: %v", err)
+		log.Errorf("sqlite init failed: %v", err)
 		return err
 	}
 	gcSvc := service.GetGlobalConfigService()
 	if err := gcSvc.InitGlobalConfig(); err != nil {
-		log.Log.Errorf("init global config failed: %v", err)
+		log.Errorf("init global config failed: %v", err)
 		return err
 	}
-	gc, err := gcSvc.GetConfig()
-	if err != nil {
-		log.Log.Errorf("get global config failed: %v", err)
+	if err := gcSvc.Sync(); err != nil {
+		log.Errorf("sync global config failed: %v", err)
 		return err
 	}
-	GlobalConfig = *gc
 
-	log.Log.Info("global init success")
+	log.Info("global init success")
 	return nil
 }

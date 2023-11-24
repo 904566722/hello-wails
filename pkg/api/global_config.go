@@ -25,9 +25,16 @@ func (gc *GlobalConfigApi) Get() models.BaseResponse {
 
 func (gc *GlobalConfigApi) Set(req models.GlobalConfigReq) models.BaseResponse {
 	if err := gc.gcSvc.Update(&models.GlobalConfig{
-		JsonFormat: req.JsonFormat,
+		JsonFormat:   req.JsonFormat,
+		EtcdEndPoint: req.EtcdEndPoint,
 	}); err != nil {
 		return RespErr(models.CodeFail, err.Error())
 	}
+
+	// 更新之后，同步到内存中
+	if err := gc.gcSvc.Sync(); err != nil {
+		return RespErr(models.CodeFail, "sync global config failed")
+	}
+
 	return RespSuccess(nil)
 }

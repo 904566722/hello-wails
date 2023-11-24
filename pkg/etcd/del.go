@@ -2,13 +2,10 @@ package etcd
 
 import (
 	"fmt"
-	"strconv"
 
-	"github.com/sirupsen/logrus"
 	clientv3 "go.etcd.io/etcd/client/v3"
 
 	"changeme/pkg/log"
-	"changeme/pkg/utils"
 )
 
 func (e *EtcdClient) Del(key string) error {
@@ -31,30 +28,36 @@ func (e *EtcdClient) DelByPrefix(pfx string) (int64, error) {
 		return -1, err
 	}
 
-	log.Log.WithFields(logrus.Fields{
+	log.InfoWithFields(map[string]interface{}{
 		"prefix": pfx,
 		"number": resp.Deleted,
-	}).Info("delete by prefix key")
+	}, "delete by prefix key")
 	return resp.Deleted, nil
 }
 
 func (e *EtcdClient) DelByKeyword(kw string) (int64, error) {
-	out, err := utils.ExecCmdRetOut("sh", "-c", fmt.Sprintf("etcdctl --prefix --keys-only get '' | grep -i %s | wc -l", kw))
+	kwKeys, err := e.ListKeyByKeyword(kw)
 	if err != nil {
+		log.Errorf("list key by keyword failed: [%v]", err)
 		return -1, err
 	}
-	n, err := strconv.Atoi(out)
+	if len(kwKeys) == 0 {
+		return 0, nil
+	}
+	ops := make([]clientv3.Op, 0, len(kwKeys))
+	for _, key := range kwKeys {
+		ops = append(ops, clientv3.OpDelete(key))
+	}
+	ctx, cancel := e.etcdBatchOpCtx()
+	defer cancel()
+	txn := e.cli.Txn(ctx)
+	resp, err := txn.Then(ops...).Commit()
 	if err != nil {
+		log.Errorf("batch delete by keyword failed: [%v]", err)
 		return -1, err
 	}
-
-	_, err = utils.ExecCmdRetOut("sh", "-c", fmt.Sprintf("etcdctl --prefix --keys-only get '' | grep -i %s | xargs -I {} etcdctl del {}", kw))
-	if err != nil {
-		return -1, err
+	if !resp.Succeeded {
+		return -1, fmt.Errorf("batch delete by keyword failed: [%v]", resp)
 	}
-	log.Log.WithFields(logrus.Fields{
-		"keyword": kw,
-		"number":  n,
-	}).Info("delete by keyword")
-	return int64(n), nil
+	return int64(len(kwKeys)), nil
 }

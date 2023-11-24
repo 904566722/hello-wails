@@ -9,9 +9,11 @@ import (
 )
 
 const (
-	endpoint      = "localhost:2379"
-	dialTimeout   = 5 * time.Second
-	etcdOpTimeout = 10 * time.Second
+	endpoint            = "localhost:2379"
+	dialTimeout         = 5 * time.Second
+	etcdOpTimeout       = 10 * time.Second
+	etcdBatchOpTimeout  = 1 * time.Minute
+	etcdTestConnTimeout = 4 * time.Second
 )
 
 var (
@@ -66,4 +68,39 @@ func MustGetClient() *clientv3.Client {
 
 func (e *EtcdClient) etcdOpCtx() (context.Context, context.CancelFunc) {
 	return context.WithTimeout(context.TODO(), etcdOpTimeout)
+}
+
+func (e *EtcdClient) etcdBatchOpCtx() (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.TODO(), etcdBatchOpTimeout)
+}
+
+func (e *EtcdClient) testConnCtx() (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.TODO(), etcdTestConnTimeout)
+}
+
+// TestConnecting 测试连接
+func (e *EtcdClient) TestConnecting(endpoint string) error {
+	cli, err := clientv3.New(clientv3.Config{
+		Endpoints:   []string{endpoint},
+		DialTimeout: etcdTestConnTimeout,
+	})
+	if err != nil {
+		return err
+	}
+	defer cli.Close()
+	ctx, cancel := e.testConnCtx()
+	defer cancel()
+	_, err = cli.Get(ctx, "test")
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (e *EtcdClient) ChangeEndpoint(endpoint string) {
+	e.cli.SetEndpoints(endpoint)
+}
+
+func (e *EtcdClient) EndPoints() []string {
+	return e.cli.Endpoints()
 }

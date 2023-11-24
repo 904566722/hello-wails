@@ -3,8 +3,6 @@ package sqlite
 import (
 	"sync"
 
-	"github.com/sirupsen/logrus"
-
 	"changeme/pkg/log"
 	"changeme/pkg/models"
 )
@@ -27,22 +25,22 @@ func GetGlobalConfigDb() *GlobalConfigDb {
 func (g *GlobalConfigDb) Select(id int) (*models.GlobalConfig, error) {
 	// 根据 id 查询一条数据
 	querySQL := `
-		select id, jsonFormat from global_config
+		select id, jsonFormat, etcdEndPoint from global_config
 		where id = ?;
 	`
 
 	rows, err := db.Query(querySQL, id)
 	if err != nil {
-		log.Log.Errorf("query global_config failed: [%v]", err)
+		log.Errorf("query global_config failed: [%v]", err)
 		return nil, err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		gc := &models.GlobalConfig{}
-		err = rows.Scan(&gc.Id, &gc.JsonFormat)
+		err = rows.Scan(&gc.Id, &gc.JsonFormat, &gc.EtcdEndPoint)
 		if err != nil {
-			log.Log.Errorf("scan global_config failed: [%v]", err)
+			log.Errorf("scan global_config failed: [%v]", err)
 			return nil, err
 		}
 		return gc, nil
@@ -54,11 +52,11 @@ func (g *GlobalConfigDb) Select(id int) (*models.GlobalConfig, error) {
 func (g *GlobalConfigDb) Insert(gc *models.GlobalConfig) error {
 	// 插入一条数据
 	insertSQL := `
-		INSERT INTO global_config (jsonFormat)
-		VALUES (?);
+		INSERT INTO global_config (jsonFormat, etcdEndPoint)
+		VALUES (?, ?);
 	`
 
-	_, err := db.Exec(insertSQL, gc.JsonFormat)
+	_, err := db.Exec(insertSQL, gc.JsonFormat, gc.EtcdEndPoint)
 	if err != nil {
 		return err
 	}
@@ -68,17 +66,17 @@ func (g *GlobalConfigDb) Insert(gc *models.GlobalConfig) error {
 func (g *GlobalConfigDb) Update(gc *models.GlobalConfig) error {
 	// 更新一条数据
 	updateSQL := `
-		UPDATE global_config SET jsonFormat = ?
+		UPDATE global_config SET jsonFormat = ?, etcdEndPoint = ?
 		WHERE id = ?;
 	`
 
-	_, err := db.Exec(updateSQL, gc.JsonFormat, gc.Id)
+	_, err := db.Exec(updateSQL, gc.JsonFormat, gc.EtcdEndPoint, gc.Id)
 	if err != nil {
-		log.Log.Errorf("update global_config failed: [%v]", err)
+		log.Errorf("update global_config failed: [%v]", err)
 		return err
 	}
-	log.Log.WithFields(logrus.Fields{
+	log.InfoWithFields(map[string]interface{}{
 		"jsonFormat": gc.JsonFormat,
-	}).Info("update global_config success")
+	}, "update global_config success")
 	return nil
 }

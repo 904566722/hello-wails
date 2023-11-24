@@ -1,8 +1,14 @@
 package etcd
 
 import (
+	"errors"
+
 	"changeme/pkg/models"
 	"changeme/pkg/utils"
+)
+
+var (
+	ErrValueNotFound = errors.New("value not found")
 )
 
 func (e *EtcdClient) Get(key string) (*models.KeyVal, error) {
@@ -18,7 +24,7 @@ func (e *EtcdClient) Get(key string) (*models.KeyVal, error) {
 			Value: string(kv.Value),
 		}, nil
 	}
-	return nil, nil
+	return nil, ErrValueNotFound
 }
 
 func (e *EtcdClient) Get2String(key string) (string, error) {

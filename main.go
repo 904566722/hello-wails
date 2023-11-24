@@ -8,7 +8,6 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 
 	"changeme/pkg/api"
-	etcd2 "changeme/pkg/etcd"
 	"changeme/pkg/global"
 )
 
@@ -25,7 +24,7 @@ func main() {
 	etcdApi := api.NewEtcdApi()
 	opApi := api.NewOperatorApi()
 	gcApi := api.NewGlobalConfigApi()
-	etcdClient := etcd2.MustGetEtcdClient()
+	txtApi := api.NewTextApi()
 
 	// Create application with options
 	err := wails.Run(&options.App{
@@ -38,13 +37,7 @@ func main() {
 		BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
 		OnStartup:        app.startup,
 		// 指定向前端暴露哪些结构体方法
-		Bind: []interface{}{
-			app,
-			etcdApi,
-			opApi,
-			gcApi,
-			etcdClient,
-		},
+		Bind: []interface{}{app, etcdApi, opApi, gcApi, txtApi},
 	})
 
 	if err != nil {
